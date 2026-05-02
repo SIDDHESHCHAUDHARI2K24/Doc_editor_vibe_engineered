@@ -1,36 +1,37 @@
 """Alembic environment configuration for the backend.
 
 This file configures how Alembic connects to the database and runs
-migrations. It uses the same `DATABASE_URL` environment variable that
-the application itself relies on.
+migrations. It reads the database URL from the application Settings
+and uses the SQLAlchemy Base metadata for autogeneration.
 """
 
-import os
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
+# Alembic Config object
 config = context.config
 
 # Interpret the config file for Python logging.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Use the same database URL as the application.
-database_url = os.getenv("DATABASE_URL")
-if database_url:
-    config.set_main_option("sqlalchemy.url", database_url)
+# Import application models and settings
+from app.features.core.models import Base  # noqa: E402
+from app.features.core.settings import get_settings  # noqa: E402
 
-# target_metadata will be set once SQLAlchemy models are introduced.
-target_metadata = None
+settings = get_settings()
+target_metadata = Base.metadata
+
+# Set the database URL from application settings (use sync driver for migrations)
+sync_url = settings.database_url.replace("postgresql+asyncpg://", "postgresql+psycopg2://")
+config.set_main_option("sqlalchemy.url", sync_url)
 
 
 def run_migrations_offline() -> None:
-    """Run migrations in 'offline' mode using an URL only."""
+    """Run migrations in 'offline' mode using a URL only."""
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,

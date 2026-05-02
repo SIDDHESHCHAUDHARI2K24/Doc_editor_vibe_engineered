@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     csrf_secret_key: SecretStr = SecretStr("dev-csrf-secret-change-in-prod")
 
     # --- Postgres ---
-    database_url: str = "postgresql+asyncpg://app:app@localhost:5432/docs_dev"
+    database_url: str = "postgresql+asyncpg://postgres:xyzzyspoon2k01@localhost:5432/ajaia_project"
 
     # --- Valkey ---
     valkey_url: str = "redis://localhost:6379/0"

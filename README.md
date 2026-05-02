@@ -14,7 +14,8 @@ A Google Docs–style real-time collaborative rich-text editor built with FastAP
 
 ### Prerequisites
 
-- Docker Desktop (with WSL2 backend on Windows)
+- Docker Desktop (with WSL2 backend on Windows) — for Valkey + MinIO only
+- PostgreSQL 17+ installed locally (via pgAdmin or installer)
 - Node.js LTS (≥ 20)
 - Python 3.11+
 - [uv](https://docs.astral.sh/uv/) — install via `pip install uv` or `scoop install uv` (Windows)
@@ -22,9 +23,9 @@ A Google Docs–style real-time collaborative rich-text editor built with FastAP
 Verify prerequisites:
 ```powershell
 docker --version
-node --version     # ≥ 20
-python --version   # ≥ 3.11
-where.exe uv       # should resolve
+node --version       # ≥ 20
+python --version     # ≥ 3.11
+where.exe uv         # should resolve
 ```
 
 ### 1. Clone & Environment Setup
@@ -32,22 +33,34 @@ where.exe uv       # should resolve
 ```powershell
 git clone <repo-url>
 cd "Ajaia Recruitment Test - Document Editor"
-cp .env.example .env
 ```
 
-### 2. Start Infrastructure
+Create a `.env` file in `backend/` from the template:
+```powershell
+cp .env.example backend\.env
+```
+
+**IMPORTANT**: Edit `backend\.env` and set your PostgreSQL connection details:
+```
+DATABASE_URL=postgresql+asyncpg://postgres:YOUR_PASSWORD@localhost:5432/YOUR_DATABASE
+```
+
+### 2. Start Infrastructure (Valkey + MinIO)
 
 ```powershell
 docker compose up -d
-docker compose ps   # all services should show "healthy"
+docker compose ps    # valkey + minio should show "healthy"
 ```
 
-### 3. Start Backend
+### 3. Set Up Database & Start Backend
 
 ```powershell
 cd backend
 uv sync
-uv run alembic upgrade head
+# Run migrations from repo root (alembic.ini lives there)
+cd ..
+./backend/.venv/Scripts/alembic upgrade head
+cd backend
 uv run uvicorn app.app:create_app --factory --reload
 ```
 

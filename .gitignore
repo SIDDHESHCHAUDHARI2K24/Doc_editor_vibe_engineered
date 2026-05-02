@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+.venv/
+env/
+venv/
+.python-version
+
+# Node
+node_modules/
+dist/
+.eslintcache
+*.tsbuildinfo
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/settings.json
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Coverage
+coverage/
+.coverage
+.coverage.*
+htmlcov/
+.coverage
+
+# Docker volumes
+volumes/
+
+# opencode
+opencode.json

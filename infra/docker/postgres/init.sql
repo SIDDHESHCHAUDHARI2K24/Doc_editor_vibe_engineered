@@ -1,0 +1,3 @@
+-- Postgres initialization script
+-- Creates additional schemas if needed.
+-- Currently a placeholder — populated as the schema grows.

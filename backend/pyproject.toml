@@ -25,7 +25,12 @@ dependencies = [
     "redis>=7.4.0",
     "aioboto3>=15.5.0",
     "psycopg2-binary>=2.9.12",
+    "bcrypt<5.0",
+    "bleach>=6.3.0",
+    "y-py",
 ]
+[tool.uv.sources]
+y-py = { path = "../vendor/ypy" }
 
 
 

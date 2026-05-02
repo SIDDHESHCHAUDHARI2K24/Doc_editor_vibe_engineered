@@ -1,18 +1,19 @@
-"""User logout endpoint."""
-
-from fastapi import Request, Response
-
+"""POST /api/v1/auth/logout"""
+from fastapi import Depends, Request, Response
 from app.features.core.dependencies import DbDep
+from app.features.core.security import require_session, AuthenticatedSession
+from app.features.core.settings import get_settings
+from app.features.auth.services import AuthService
 
-from .. import models
+settings = get_settings()
 
 
-async def logout(request: Request, response: Response, conn=DbDep) -> dict[str, str]:
-    """Invalidate the current session and clear the cookie."""
-    session_id = request.cookies.get("session_id")
-    if session_id:
-        await models.ensure_auth_schema(conn)
-        await models.delete_session(conn, session_token=session_id)
-
-    response.delete_cookie("session_id")
-    return {"detail": "Logged out"}
+async def logout(
+    request: Request,
+    response: Response,
+    db=DbDep,
+    auth_session: AuthenticatedSession = Depends(require_session),
+) -> dict:
+    svc = AuthService(db)
+    token = request.cookies.get(settings.session_cookie_name)
+    return await svc.logout(token, response)

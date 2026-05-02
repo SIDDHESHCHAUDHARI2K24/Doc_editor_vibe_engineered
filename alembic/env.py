@@ -22,6 +22,11 @@ if config.config_file_name is not None:
 from app.features.core.models import Base  # noqa: E402
 from app.features.core.settings import get_settings  # noqa: E402
 
+# Ensure all feature models are registered on Base.metadata
+import app.features.auth.models  # noqa: E402, F401
+import app.features.core.audit  # noqa: E402, F401
+import app.features.documents.models  # noqa: E402, F401
+
 settings = get_settings()
 target_metadata = Base.metadata
 

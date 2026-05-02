@@ -54,6 +54,24 @@ tools/superpowers/
 tools/*/.venv/
 
 # Graphify output (build artifacts)
-graphify-out/cache/
-graphify-out/manifest.json
-graphify-out/cost.json
+graphify-out/
+
+# Vendored y-py build artifacts
+vendor/ypy/target/
+
+# Agent rules (local only)
+AGENTS.md
+Claude.md
+.cursorrules
+
+# Agent configs (local only)
+.codex/
+.cursor/
+.opencode/
+
+# Internal docs
+docs/AGENT-SETUP.md
+submission.md
+
+# Internal scripts
+scripts/_verify_hashes.py

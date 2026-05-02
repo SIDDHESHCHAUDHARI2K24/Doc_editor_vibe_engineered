@@ -4,6 +4,7 @@ from collections.abc import AsyncIterator
 from functools import lru_cache
 
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
 
 from app.features.core.settings import get_settings
 
@@ -11,11 +12,13 @@ from app.features.core.settings import get_settings
 @lru_cache
 def _get_engine() -> AsyncEngine:
     settings = get_settings()
+    engine_kwargs = {"pool_size": 5, "max_overflow": 10, "pool_pre_ping": True}
+    if settings.environment == "test":
+        engine_kwargs = {"poolclass": NullPool}
     return create_async_engine(
         settings.database_url,
-        pool_size=10,
-        max_overflow=20,
         echo=settings.debug,
+        **engine_kwargs,
     )
 
 

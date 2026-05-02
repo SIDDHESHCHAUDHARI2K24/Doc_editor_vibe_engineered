@@ -3,34 +3,12 @@ import { render, screen } from '@testing-library/react'
 import App from '@/App'
 
 beforeEach(() => {
-  vi.spyOn(globalThis, 'fetch').mockImplementation(
-    vi.fn((input: RequestInfo | URL) => {
-      const url = input.toString()
-      return Promise.resolve({
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            status: url.includes('localhost:8000') ? 'ok-direct' : 'ok-proxied',
-          }),
-      } as Response)
-    }),
-  )
+  vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('not authed'))
 })
 
 describe('App', () => {
-  it('renders the health check heading', async () => {
+  it('renders without crashing and shows LoginForm', async () => {
     render(<App />)
-
-    expect(
-      screen.getByRole('heading', {
-        name: /document editor.*health check/i,
-      }),
-    ).toBeInTheDocument()
-  })
-
-  it('shows loading state initially', () => {
-    render(<App />)
-    expect(screen.getByText(/checking backend health/i)).toBeInTheDocument()
+    expect(await screen.findByText('Use one of the demo accounts to sign in')).toBeDefined()
   })
 })

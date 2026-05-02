@@ -1158,6 +1158,62 @@ This is the **hardening sub-task** for Stage 3. The principle: every byte coming
 
 ## Appendix
 
+### Development Chronology (Stage 3, dependency-map aligned)
+
+This chronology ties Stage 3 execution order to the global dependency map (`S2 -> S3 -> S4`) and to this plan's intra-stage graph. Use this as the default implementation sequence.
+
+| Chronology Step | Stage Gate / Wave | Scope | Must be complete before next step |
+|---|---|---|---|
+| C0 | **Global gate: S2 -> S3** | Validate Stage 3 entry criteria from `dependency-map.md` and this plan's Entry Criteria. | No Stage 3 coding starts before this gate is green. |
+| C1 | **Wave 0 (de-risk first)** | P3.T3.S1 version lock + smoke tests (`quill`, `y-quill`, `yjs`, `y-py` compatibility). | Halt Stage 3 if this fails; resolve versions first. |
+| C2 | **Phase A / Wave 1 (parallel foundation)** | P3.T1.*, P3.T2.S1-S3, P3.T3.S2, and design primitives (P3.T4.S1-S3 can be prepared in parallel). | Foundation APIs/sanitization/editor wiring prerequisites available. |
+| C3 | **Phase A / Wave 2 (integration)** | P3.T2.S4 + P3.T3.S3 + P3.T3.S4 + P3.T3.S5. | Editor roundtrip path is integrated end-to-end. |
+| C4 | **Phase A gate** | P3.T3.S6 plain-typing roundtrip smoke passes (including unauthorized flow). | **Phase B cannot start** until this gate passes. |
+| C5 | **Phase B / formatting build** | P3.T4.S4-S7 and P3.T5.S1-S5 using the stable Phase A editor core. | All toolbar/link/polish features implemented and manually checked. |
+| C6 | **Cross-phase quality + docs** | P3.T6.S1-S3 targeted test runs + docs/rules updates. | Stage 3 exit criteria evidence prepared. |
+| C7 | **Global gate: S3 -> S4 handoff** | Confirm Stage 3 exit criteria and handoff checklist completion. | Stage 4 work starts only after this closure gate. |
+
+### Agent Execution Protocol (mandatory for Stage 3)
+
+1. Coding agents and sub-agents must use `/using-superpowers` workflow for planning, development, testing, review, and commit preparation into the existing local repository.
+2. Execute tests for **specific impacted test cases only** during normal iteration. Do **not** run the entire test suite unless required by a final gate, pre-push requirement, or unresolved cross-feature regression risk.
+3. Maintain and iterate a phase log table for each active phase. Update it continuously during intermediate work; do not treat it as end-of-phase paperwork.
+
+### Iterative Phase Logs (use throughout implementation)
+
+#### Phase A Log (P3.T1, P3.T2, P3.T3)
+
+| Item ID | Work Type | Scope | Owner (Agent/Sub-agent) | Status | Evidence / Link | Last Updated |
+|---|---|---|---|---|---|---|
+| A-01 | Development | P3.T3.S1 version lock + smoke test | TBD | Not started | package lock + smoke output | TBD |
+| A-02 | Development | P3.T1 state endpoints (`GET/PUT /state`) | TBD | Not started | endpoint tests | TBD |
+| A-03 | Development | P3.T2 sanitize module + allowlist + wiring | TBD | Not started | sanitize tests + logs | TBD |
+| A-04 | Development | P3.T3 hook/editor/route wiring | TBD | Not started | editor roundtrip demo | TBD |
+| A-05 | Testing (targeted) | Only impacted backend/frontend test cases for A-02 to A-04 | TBD | Not started | test command + result | TBD |
+| A-06 | Review | Code review findings and fixes for Phase A | TBD | Not started | review notes | TBD |
+| A-07 | Gate Check | P3.T3.S6 smoke gate sign-off | TBD | Not started | sign-off note | TBD |
+
+#### Phase B Log (P3.T4, P3.T5)
+
+| Item ID | Work Type | Scope | Owner (Agent/Sub-agent) | Status | Evidence / Link | Last Updated |
+|---|---|---|---|---|---|---|
+| B-01 | Development | Toolbar layout + wiring | TBD | Not started | UI screenshots + behavior notes | TBD |
+| B-02 | Development | Formatting actions (inline/list/clear/undo/redo) | TBD | Not started | targeted component tests | TBD |
+| B-03 | Development | Link dialog + validation | TBD | Not started | dialog tests + manual check | TBD |
+| B-04 | Development | Save indicator + beforeunload + 403 redirect | TBD | Not started | UX behavior evidence | TBD |
+| B-05 | Testing (targeted) | Only impacted tests for toolbar/editor/link flows | TBD | Not started | test command + result | TBD |
+| B-06 | Review | Code review findings and fixes for Phase B | TBD | Not started | review notes | TBD |
+
+#### Cross-Phase Quality and Handoff Log (P3.T6)
+
+| Item ID | Work Type | Scope | Owner (Agent/Sub-agent) | Status | Evidence / Link | Last Updated |
+|---|---|---|---|---|---|---|
+| Q-01 | Testing (targeted first) | Backend state/sanitize tests for changed files | TBD | Not started | pytest targeted output | TBD |
+| Q-02 | Testing (targeted first) | Frontend editor/toolbar/link tests for changed files | TBD | Not started | vitest targeted output | TBD |
+| Q-03 | Documentation | README + agent-rule/version updates | TBD | Not started | docs diff | TBD |
+| Q-04 | Final verification | Run broader suite only if required by gate/hook/risk | TBD | Not started | command + rationale | TBD |
+| Q-05 | Handoff | Stage-3-to-Stage-4 checklist completion | TBD | Not started | checklist evidence | TBD |
+
 ### Glossary (Stage 3 specific)
 
 - **Yjs binary state**: The serialized form of a `Y.Doc` produced by `Y.encodeStateAsUpdate(doc)`. Opaque bytes that can be applied to another fresh `Y.Doc` to reconstruct identical state. Format-version-tied to the Yjs major version on both ends.

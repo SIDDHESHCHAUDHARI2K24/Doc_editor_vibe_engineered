@@ -48,9 +48,9 @@ class PermissionDeniedException(AppException):
 
 
 class ValidationException(AppException):
-    def __init__(self, message: str = "Validation error", details: dict | None = None) -> None:
+    def __init__(self, message: str = "Validation error", details: dict | None = None, code: str | None = None) -> None:
         super().__init__(
-            code="VALIDATION_ERROR",
+            code=code or "VALIDATION_ERROR",
             message=message,
             details=details,
             status_code=HTTPStatus.UNPROCESSABLE_ENTITY,

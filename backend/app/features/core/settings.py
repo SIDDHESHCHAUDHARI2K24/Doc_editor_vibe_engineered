@@ -55,6 +55,7 @@ class Settings(BaseSettings):
     session_cookie_samesite: Literal["lax", "strict", "none"] = "lax"
 
     # --- Rate limiting ---
+    trusted_proxy: bool = False
     rate_limit_login_max: int = 5
     rate_limit_login_window_seconds: int = 300
     rate_limit_sharing_max: int = 20
@@ -69,6 +70,11 @@ class Settings(BaseSettings):
     upload_max_txt_md_bytes: int = 1048576
     upload_max_docx_bytes: int = 10485760
     upload_max_attachment_bytes: int = 26214400
+
+    # --- Yjs state ---
+    max_yjs_state_bytes: int = 5 * 1024 * 1024  # 5 MB
+    state_save_debounce_ms: int = 1500
+    ws_enabled: bool = False  # flipped to True in Stage 4
 
 
 @lru_cache

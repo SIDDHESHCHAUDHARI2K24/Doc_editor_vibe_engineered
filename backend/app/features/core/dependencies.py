@@ -26,3 +26,7 @@ async def get_db_dep() -> AsyncSession:
 SettingsDep = Depends(get_settings_dep)
 DbDep = Depends(get_db_dep)
 ValkeyDep = Depends(get_valkey)
+
+from app.features.auth.session_store import session_store as _session_store
+
+SessionStoreDep = Depends(lambda: _session_store)

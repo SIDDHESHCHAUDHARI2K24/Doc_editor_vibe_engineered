@@ -1,6 +1,0 @@
-[features]
-# Required for Graphify parallel extraction
-multi_agent = true
-
-[mcp]
-# MCP servers are configured in .codex/mcp.json

@@ -1,34 +1,10 @@
-"""User registration endpoint."""
-
-from fastapi import HTTPException, status
-
+"""POST /api/v1/auth/register"""
 from app.features.core.dependencies import DbDep
+from app.features.auth.services import AuthService
+from app.features.auth.schemas import RegisterRequest, LoginResponse
 
-from .. import models, schemas
-from ..utils import hash_password
 
-
-async def register(
-    payload: schemas.RegisterRequest,
-    conn=DbDep,
-) -> schemas.UserOut:
-    """Create a new user account."""
-    await models.ensure_auth_schema(conn)
-
-    existing = await models.get_user_by_email(conn, email=payload.email)
-    if existing is not None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered",
-        )
-
-    password_hash = hash_password(payload.password)
-    user_row = await models.create_user(
-        conn, email=payload.email, password_hash=password_hash
-    )
-    return schemas.UserOut(
-        id=user_row["id"],
-        email=user_row["email"],
-        created_at=user_row["created_at"],
-    )
-
+async def register(payload: RegisterRequest, db=DbDep) -> LoginResponse:
+    svc = AuthService(db)
+    data = await svc.register(payload.email, payload.username, payload.password)
+    return LoginResponse(**data)

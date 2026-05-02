@@ -1,46 +1,79 @@
-import { useState, useCallback } from 'react'
-import type { ApiRequestError } from '@/lib/api/errors'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { apiClient, ApiError } from '@/lib/api/apiClient'
 
-interface UseApiState<T> {
-  data: T | null
-  loading: boolean
-  error: ApiRequestError | null
+interface UseApiQueryOptions {
+  enabled?: boolean
 }
 
-interface UseApiReturn<T> extends UseApiState<T> {
-  execute: (...args: unknown[]) => Promise<void>
-  reset: () => void
+interface UseApiQueryResult<T> {
+  data: T | undefined
+  error: ApiError | null
+  isLoading: boolean
+  refetch: () => Promise<void>
 }
 
-export function useApi<T>(
-  apiFunction: (...args: unknown[]) => Promise<T>,
-): UseApiReturn<T> {
-  const [state, setState] = useState<UseApiState<T>>({
-    data: null,
-    loading: false,
-    error: null,
-  })
+export function useApiQuery<T>(path: string, options: UseApiQueryOptions = {}): UseApiQueryResult<T> {
+  const { enabled = true } = options
+  const [data, setData] = useState<T>()
+  const [error, setError] = useState<ApiError | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const mountedRef = useRef(true)
 
-  const execute = useCallback(
-    async (...args: unknown[]) => {
-      setState({ data: null, loading: true, error: null })
-      try {
-        const data = await apiFunction(...args)
-        setState({ data, loading: false, error: null })
-      } catch (err) {
-        setState({
-          data: null,
-          loading: false,
-          error: err instanceof Error ? (err as ApiRequestError) : null,
-        })
+  const fetchData = useCallback(async () => {
+    if (!enabled) return
+    setIsLoading(true)
+    setError(null)
+    try {
+      const result = await apiClient.get<T>(path)
+      if (mountedRef.current) {
+        setData(result)
       }
-    },
-    [apiFunction],
-  )
+    } catch (err) {
+      if (mountedRef.current && err instanceof ApiError) {
+        setError(err)
+      }
+    } finally {
+      if (mountedRef.current) {
+        setIsLoading(false)
+      }
+    }
+  }, [path, enabled])
 
-  const reset = useCallback(() => {
-    setState({ data: null, loading: false, error: null })
-  }, [])
+  useEffect(() => {
+    mountedRef.current = true
+    fetchData()
+    return () => { mountedRef.current = false }
+  }, [fetchData])
 
-  return { ...state, execute, reset }
+  return { data, error, isLoading, refetch: fetchData }
+}
+
+interface UseApiMutationResult<T, Args extends unknown[]> {
+  mutateAsync: (...args: Args) => Promise<T>
+  isLoading: boolean
+  error: ApiError | null
+}
+
+export function useApiMutation<T, Args extends unknown[] = []>(
+  fn: (...args: Args) => Promise<T>
+): UseApiMutationResult<T, Args> {
+  const [error, setError] = useState<ApiError | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+
+  const mutateAsync = useCallback(async (...args: Args) => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      return await fn(...args)
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err)
+      }
+      throw err
+    } finally {
+      setIsLoading(false)
+    }
+  }, [fn])
+
+  return { mutateAsync, isLoading, error }
 }

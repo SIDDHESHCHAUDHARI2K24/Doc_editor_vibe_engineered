@@ -1,44 +1,26 @@
-"""User login endpoint."""
+"""POST /api/v1/auth/login"""
+from fastapi import Request, Response
 
-from fastapi import HTTPException, Response, status
-
+from app.features.core.rate_limit import rate_limiter, get_client_ip
+from app.features.core.errors import RateLimitedException
+from app.features.core.settings import get_settings
 from app.features.core.dependencies import DbDep
+from app.features.auth.services import AuthService
+from app.features.auth.schemas import LoginRequest, LoginResponse
 
-from .. import models, schemas
-from ..utils import generate_session_token, hash_password, verify_password
+settings = get_settings()
 
 
-async def login(
-    payload: schemas.LoginRequest,
-    response: Response,
-    conn=DbDep,
-) -> schemas.UserOut:
-    """Authenticate a user and establish a session via cookie."""
-    await models.ensure_auth_schema(conn)
-
-    user = await models.get_user_by_email(conn, email=payload.email)
-    if user is None or not verify_password(
-        payload.password, user["password_hash"]
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
-        )
-
-    session_token = generate_session_token()
-    await models.create_session(conn, user_id=user["id"], session_token=session_token)
-
-    # HttpOnly session cookie
-    response.set_cookie(
-        key="session_id",
-        value=session_token,
-        httponly=True,
-        samesite="lax",
-    )
-
-    return schemas.UserOut(
-        id=user["id"],
-        email=user["email"],
-        created_at=user["created_at"],
-    )
-
+async def login(payload: LoginRequest, request: Request, response: Response, db=DbDep) -> LoginResponse:
+    if settings.environment != "test":
+        client_ip = get_client_ip(request)
+        rl_key = f"rl:login:{client_ip}:{payload.identifier.lower()}"
+        result = await rate_limiter.check(rl_key, settings.rate_limit_login_max, settings.rate_limit_login_window_seconds)
+        if not result.allowed:
+            raise RateLimitedException(
+                message=f"Too many login attempts. Try again in {result.retry_after:.0f} seconds.",
+                details={"retry_after": result.retry_after},
+            )
+    svc = AuthService(db)
+    data = await svc.login(payload.identifier, payload.password, response)
+    return LoginResponse(**data)

@@ -1,0 +1,8 @@
+repos:
+  - repo: local
+    hooks:
+      - id: check-agent-rules
+        name: Check agent rules equivalence
+        entry: python scripts/check_agent_rules.py
+        language: system
+        files: '^(Claude\.md|AGENTS\.md|\.cursorrules)$'

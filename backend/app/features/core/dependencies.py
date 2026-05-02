@@ -1,15 +1,15 @@
 """FastAPI dependency helpers for the `core` feature.
 
-This module re-exports reusable dependency callables and aliases for
-injecting configuration and database connections into route handlers.
+Re-exports reusable dependency callables for injecting configuration
+and database connections into route handlers.
 """
 
 from collections.abc import AsyncIterator
 
 from fastapi import Depends
 
-from .config import Settings, get_settings
 from .database import get_db
+from .settings import Settings, get_settings
 
 
 def get_settings_dep() -> Settings:
@@ -25,4 +25,3 @@ async def get_db_dep() -> AsyncIterator:
 
 SettingsDep = Depends(get_settings_dep)
 DbDep = Depends(get_db_dep)
-

@@ -1,15 +1,15 @@
 """FastAPI dependency helpers for the `core` feature.
 
-Re-exports reusable dependency callables for injecting configuration
-and database connections into route handlers.
+Re-exports reusable dependency callables for injecting configuration,
+database sessions, and Valkey connections into route handlers.
 """
 
-from collections.abc import AsyncIterator
-
 from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from .database import get_db
+from .db import get_db
 from .settings import Settings, get_settings
+from .valkey import get_valkey
 
 
 def get_settings_dep() -> Settings:
@@ -17,11 +17,12 @@ def get_settings_dep() -> Settings:
     return get_settings()
 
 
-async def get_db_dep() -> AsyncIterator:
-    """Yield a database connection as a dependency using `get_db()`."""
-    async with get_db() as conn:
-        yield conn
+async def get_db_dep() -> AsyncSession:
+    """Yield an async SQLAlchemy session."""
+    async for session in get_db():
+        yield session
 
 
 SettingsDep = Depends(get_settings_dep)
 DbDep = Depends(get_db_dep)
+ValkeyDep = Depends(get_valkey)

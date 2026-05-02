@@ -20,6 +20,8 @@ from app.features.core.settings import get_settings
 
 # Feature routers
 from app.features.auth.routers import auth_router
+from app.features.core.routes.demo import router as demo_router
+from app.features.core.routes.health import router as health_router
 
 
 def create_app() -> FastAPI:
@@ -49,6 +51,8 @@ def create_app() -> FastAPI:
     )
 
     # --- Feature routers ---
+    app.include_router(health_router)
+    app.include_router(demo_router)
     app.include_router(auth_router)
 
     return app

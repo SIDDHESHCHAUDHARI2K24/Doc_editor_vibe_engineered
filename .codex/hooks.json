@@ -1,0 +1,9 @@
+{
+  "PreToolUse": [
+    {
+      "tool": "Bash",
+      "hook": "graphify",
+      "description": "If graphify-out/GRAPH_REPORT.md exists, remind the agent to consult the knowledge graph before running commands."
+    }
+  ]
+}

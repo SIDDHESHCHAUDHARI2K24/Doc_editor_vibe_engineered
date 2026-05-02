@@ -47,3 +47,13 @@ volumes/
 
 # opencode
 opencode.json
+
+# Agent tool installs (cloned repos, venvs)
+tools/graphify/
+tools/superpowers/
+tools/*/.venv/
+
+# Graphify output (build artifacts)
+graphify-out/cache/
+graphify-out/manifest.json
+graphify-out/cost.json

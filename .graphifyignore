@@ -1,0 +1,18 @@
+# Graphify ignore — exclude build artifacts and external deps
+node_modules/
+.venv/
+dist/
+__pycache__/
+*.pyc
+.git/
+tools/
+graphify-out/
+.opencode/
+.cursor/
+.codex/
+valkey/
+minio/
+infra/
+# docker volumes and terraform state
+*.tfstate*
+.terraform/

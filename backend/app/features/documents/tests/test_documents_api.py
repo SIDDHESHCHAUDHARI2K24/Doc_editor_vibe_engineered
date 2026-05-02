@@ -3,6 +3,7 @@ import uuid
 
 import httpx
 import pytest
+import y_py as Y
 
 from app.app import create_app
 
@@ -253,3 +254,87 @@ async def test_mutation_with_csrf_works(app):
         csrf = await _login_as_alice(client)
         resp = await _create_doc(client, csrf, "CSRF Works")
         assert resp.status_code == 201
+
+
+# ---------------------------------------------------------------------------
+# STATE SAVE / LOAD
+# ---------------------------------------------------------------------------
+
+
+def _encode_test_state(text: str = "hello world") -> bytes:
+    """Create a valid Yjs binary state update."""
+    doc = Y.YDoc()
+    ytext = doc.get_text("quill")
+    with doc.begin_transaction() as txn:
+        ytext.insert(txn, 0, text)
+    return bytes(Y.encode_state_as_update(doc))
+
+
+@pytest.mark.asyncio
+async def test_put_and_get_state_roundtrip(app):
+    async with _new_client(app) as client:
+        csrf = await _login_as_alice(client)
+        create_resp = await _create_doc(client, csrf, "State Test")
+        doc_id = create_resp.json()["id"]
+
+        state = _encode_test_state("hello world")
+
+        resp = await client.put(
+            f"/api/v1/documents/{doc_id}/state",
+            content=state,
+            headers={"Content-Type": "application/octet-stream", "X-CSRF-Token": csrf},
+        )
+        assert resp.status_code == 204, resp.text
+
+        resp = await client.get(f"/api/v1/documents/{doc_id}/state")
+        assert resp.status_code == 200
+        assert len(resp.content) > 0
+
+        decoded = Y.YDoc()
+        Y.apply_update(decoded, resp.content)
+        decoded_text = str(decoded.get_text("quill"))
+        assert decoded_text == "hello world"
+
+
+@pytest.mark.asyncio
+async def test_put_state_rejects_unsafe_urls(app):
+    async with _new_client(app) as client:
+        csrf = await _login_as_alice(client)
+        create_resp = await _create_doc(client, csrf, "Unsafe Test")
+        doc_id = create_resp.json()["id"]
+
+        state = _encode_test_state("click javascript:alert(1) here")
+
+        resp = await client.put(
+            f"/api/v1/documents/{doc_id}/state",
+            content=state,
+            headers={"Content-Type": "application/octet-stream", "X-CSRF-Token": csrf},
+        )
+        assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_put_state_rejects_corrupt_binary(app):
+    async with _new_client(app) as client:
+        csrf = await _login_as_alice(client)
+        create_resp = await _create_doc(client, csrf, "Corrupt Test")
+        doc_id = create_resp.json()["id"]
+
+        resp = await client.put(
+            f"/api/v1/documents/{doc_id}/state",
+            content=b"\x00\x01\x02",
+            headers={"Content-Type": "application/octet-stream", "X-CSRF-Token": csrf},
+        )
+        assert resp.status_code in (400, 422)
+
+
+@pytest.mark.asyncio
+async def test_get_state_unaltered_doc_returns_empty(app):
+    async with _new_client(app) as client:
+        csrf = await _login_as_alice(client)
+        create_resp = await _create_doc(client, csrf, "Fresh Doc")
+        doc_id = create_resp.json()["id"]
+
+        resp = await client.get(f"/api/v1/documents/{doc_id}/state")
+        assert resp.status_code == 200
+        assert len(resp.content) == 0

@@ -95,13 +95,14 @@ class DocumentService:
 
     async def set_state(self, doc_id: UUID, state_bytes: bytes) -> None:
         """Persist Yjs state bytes for a document, with sanitization."""
-        from app.features.core.sanitize import decode_state, extract_text_content
-        import re
         if state_bytes:
-            doc = await asyncio.to_thread(decode_state, state_bytes)
-            text = await asyncio.to_thread(extract_text_content, doc)
-            # Validate no javascript:/data: URLs in text links
-            # (Delta-level validation is applied separately for paths that produce Deltas)
+            from app.features.core.sanitize import decode_state, extract_text_content
+
+            def _decode_and_extract(data: bytes) -> str:
+                doc = decode_state(data)
+                return extract_text_content(doc)
+
+            text = await asyncio.to_thread(_decode_and_extract, state_bytes)
             for scheme in ('javascript:', 'data:', 'vbscript:', 'file:'):
                 if scheme in text.lower():
                     raise ValidationException(

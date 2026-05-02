@@ -22,6 +22,7 @@ export function useDocumentState(docId: string): UseDocumentStateResult {
   const [hasPendingChanges, setHasPendingChanges] = useState(false)
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const savingRef = useRef(false)
+  const pendingSaveRef = useRef(false)
   const docRef = useRef<Y.Doc | null>(null)
   const docIdRef = useRef(docId)
 
@@ -64,8 +65,12 @@ export function useDocumentState(docId: string): UseDocumentStateResult {
   }, [docId])
 
   const performSave = useCallback(async (doc: Y.Doc, id: string) => {
-    if (savingRef.current) return
+    if (savingRef.current) {
+      pendingSaveRef.current = true
+      return
+    }
     savingRef.current = true
+    pendingSaveRef.current = false
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current)
       debounceTimer.current = null
@@ -86,6 +91,17 @@ export function useDocumentState(docId: string): UseDocumentStateResult {
       setLastErrorStatus(apiErr.status ?? null)
     } finally {
       savingRef.current = false
+      if (pendingSaveRef.current) {
+        if (debounceTimer.current) {
+          clearTimeout(debounceTimer.current)
+        }
+        debounceTimer.current = setTimeout(() => {
+          debounceTimer.current = null
+          if (docRef.current) {
+            void performSave(docRef.current, docIdRef.current)
+          }
+        }, 0)
+      }
     }
   }, [])
 
